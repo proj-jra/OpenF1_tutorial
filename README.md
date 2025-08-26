@@ -123,7 +123,7 @@ visualizer.py
 ```
 Creates interactive charts:
 
-[new] plot_sector_times(): bar chart of sectors (1-3) colored by fastest(magenta), average (green), slowest (red) with driver and lap selection.
+[***new***] plot_sector_times(): bar chart of sectors (1-3) colored by fastest(*magenta*), average (*green*), and slowest (*red*) with driver and lap selection.
 plot_lap_times(): line chart of lap_duration colored by driver
 
 plot_tire_strategy(): horizontal bar chart from stints
@@ -141,7 +141,7 @@ Ideas to build on:
 - Add tire degradation trends
 - Compare qualifying vs. race pace
 - Highlight fastest laps and race events
-- <u> Integrate sector time analytics </u>
+- Integrate sector time analytics (50%)
 
 ---
 
