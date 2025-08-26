@@ -2,7 +2,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 import pandas as pd
-
+import numpy as np
 
 # Utility Formatters
 def format_lap_time(seconds):
@@ -19,6 +19,59 @@ def format_seconds_to_mmss(seconds):
     secs = int(seconds % 60)
     return f"{minutes:02}:{secs:02}"
 
+# Lap Sector Time Chart
+def plot_sector_times(sector_df, driver_number, lap_number, driver_name=None):
+    """Plots a bar chart of sector times for a driver and a specific lap time."""
+
+    row = sector_df[
+        (sector_df["driver_number"] == driver_number) &
+        (sector_df["lap_number"] == lap_number)
+    ]
+    if row.empty:
+        return None
+    
+    sector_times = [
+        row.iloc[0]["duration_sector_1"],
+        row.iloc[0]["duration_sector_2"],
+        row.iloc[0]["duration_sector_3"]
+    ]
+    sector_labels =["Sector 1", "Sector 2", "Sector 3"]
+
+    min_idx = np.argmin(sector_times)
+    max_idx = np.argmax(sector_times)
+    colors=[]
+    for i in range(3):
+        if i == min_idx:
+            colors.append("#8B008B") #2ca02c for fastest
+        elif i == max_idx:
+            colors.append("#8B0000") #8B0000 for slowest
+        else:
+            colors.append("#2ca02c") #8B008B for average
+    
+    fig = go.Figure()
+    cumulative = 0
+    for i, (label, time, color) in enumerate(zip(sector_labels, sector_times, colors)):
+        fig.add_trace(go.Bar(
+            y=[f"{driver_name or driver_number} Lap {lap_number}"],
+            x=[time],
+            name=label,
+            marker_color=color,
+            orientation="h",
+            offsetgroup=0,
+            base=cumulative,
+            hovertemplate=f"{label}: {time:.3f} s<extra></extra>"
+        ))
+        cumulative += time
+    title = f"Sector Times for:  {driver_name or driver_number} on Lap {lap_number}"
+    fig.update_layout(
+        barmode="stack",
+        title=f"Sector Times for {driver_name or driver_number} on Lap {lap_number}",
+        xaxis_title="Total Lap Time (seconds)",
+        yaxis_title="",
+        height=300,
+        showlegend=True
+    )
+    return fig
 
 # Lap Time Chart
 def plot_lap_times(lap_time_df: pd.DataFrame, color_map: dict):
@@ -44,6 +97,23 @@ def plot_lap_times(lap_time_df: pd.DataFrame, color_map: dict):
 
     fig = go.Figure()
 
+    if not lap_time_df.empty:
+        fastest_lap = lap_time_df.loc[lap_time_df["lap_duration"].idxmin()]
+        fig.add_trace(go.Scatter(
+            x=[fastest_lap["lap_number"]],
+            y=[fastest_lap["lap_duration"]],
+            mode="markers+text",
+            marker=dict(
+                color="magenta",
+                size=15,
+                symbol="hourglass-open"
+            ),
+            text=["Fastest Lap"],
+            textposition="top center",
+            showlegend=False,
+            hoverinfo="skip"
+        ))
+    
     for driver in lap_time_df["name_acronym"].unique():
         driver_data = lap_time_df[lap_time_df["name_acronym"] == driver].copy()
         driver_data = driver_data.sort_values("lap_number")
@@ -76,14 +146,14 @@ def plot_lap_times(lap_time_df: pd.DataFrame, color_map: dict):
         height=600,
     )
 
-    # Format Y-axis to readable MM:SS format
+    # Format Y-axis to readable MM:SS:MMM format
     tick_vals = sorted(lap_time_df["lap_duration"].dropna().unique())
     tick_vals = [round(val, 0) for val in tick_vals if 60 <= val <= 180]  # clean range
     tick_vals = sorted(set(tick_vals))[::5]  # fewer ticks, every ~5 sec
 
     fig.update_yaxes(
         tickvals=tick_vals,
-        ticktext=[format_seconds_to_mmss(val) for val in tick_vals],
+        ticktext=[format_lap_time(val) for val in tick_vals],  #updated format_seconds_to_mmss to format_lap_time to show milliseconds of the lap times.
     )
 
     return fig

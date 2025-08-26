@@ -78,6 +78,7 @@ Dynamic year/country selection
 Granular session data filtering
 
 Lap time, tire strategy, and pit stop visualizations
+(8/27: Added Lap Sector Times)
 
 #### Key Flow:
 
@@ -122,11 +123,13 @@ visualizer.py
 ```
 Creates interactive charts:
 
+[new] plot_sector_times(): bar chart of sectors (1-3) colored by fastest(magenta), average (green), slowest (red) with driver and lap selection.
 plot_lap_times(): line chart of lap_duration colored by driver
 
 plot_tire_strategy(): horizontal bar chart from stints
 
 plot_pit_stop(): vertical bar chart for pit_duration
+
 
 All charts format hover templates and colors using OpenF1 data fields.
 
@@ -138,7 +141,7 @@ Ideas to build on:
 - Add tire degradation trends
 - Compare qualifying vs. race pace
 - Highlight fastest laps and race events
-- Integrate sector time analytics
+- <u> Integrate sector time analytics </u>
 
 ---
 

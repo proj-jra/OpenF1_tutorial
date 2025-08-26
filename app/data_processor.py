@@ -1,5 +1,23 @@
 import pandas as pd
 
+def process_sector_times(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Prepare Lap Sector time data for visualization.
+    - Shows chosen driver and lap
+    - Sorts by driver, lap time
+    
+    args:
+        df (pd.DataFrame): Raw sector time data from API.
+    returns:
+        pd.DataFrame: Cleaned and sorted sector time data.
+    """
+    if df.empty:
+        return df
+    
+    df = df[df['duration_sector_1','duration_sector_2','duration_sector_3'].notna()]
+    df = df.sort_values(['driver_number', 'lap number'])
+    
+    return df
 
 def process_lap_data(df: pd.DataFrame) -> pd.DataFrame:
     """

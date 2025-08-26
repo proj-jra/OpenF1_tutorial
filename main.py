@@ -2,18 +2,21 @@ import streamlit as st
 from app.data_loader import (
     fetch_data,
     fetch_sessions,
+    fetch_sector_data,
     fetch_laps,
     fetch_stints,
     fetch_pit_stop,
     fetch_drivers
 )
 from app.data_processor import (
+    process_sector_times,
     process_lap_data,
     process_stints,
     process_pit_stops,
     build_driver_color_map
 )
 from app.visualizer import (
+    plot_sector_times,
     plot_lap_times,
     plot_tire_strategy,
     plot_pit_stop
@@ -22,7 +25,7 @@ from app.visualizer import (
 st.set_page_config(page_title="F1 Strategy Dashboard", layout="wide")
 
 st.title("🏎️ Formula 1 Strategy Dashboard")
-st.markdown("_Powered by OpenF1.org • Built by Attila Bordan_")
+st.markdown("_Powered by OpenF1.org • Built by Attila Bordan • Improvements by Jilliana Alvarez_")
 
 col1, col2 = st.columns(2)
 
@@ -67,6 +70,41 @@ driver_df = fetch_drivers(selected_session_key)
 driver_df["driver_number"] = driver_df["driver_number"].astype(str)
 driver_color_map = build_driver_color_map(driver_df)
 driver_info = driver_df[["driver_number", "name_acronym"]]
+
+# Sector times
+sector_df = fetch_sector_data(selected_session_key)
+sector_df["driver_number"] = sector_df["driver_number"].astype(str)
+    # Let user select driver and lap.
+driver_options = {
+    f"{row['driver_number']} - {row['name_acronym']}": row['driver_number']
+    for _, row in driver_df.iterrows()
+}
+selected_driver_label = st.selectbox("Select Driver", list(driver_options.keys()))
+selected_driver = driver_options[selected_driver_label]
+
+available_laps = sector_df[sector_df["driver_number"] == selected_driver]["lap_number"].unique()
+if len(available_laps) == 0:
+    st.warning("No laps available for the selected driver.")
+    st.stop()
+selected_lap = st.selectbox("Select Lap", available_laps)
+
+driver_name_row = driver_df[driver_df["driver_number"] == selected_driver ]
+if not driver_name_row.empty:
+    driver_name = driver_name_row["name_acronym"].values[0]
+else:
+    driver_name = selected_driver
+
+filtered = sector_df[
+    (sector_df["driver_number"] == selected_driver)&
+    (sector_df["lap_number"] == selected_lap)
+]
+
+
+fig = plot_sector_times(sector_df, selected_driver, selected_lap, driver_name)
+if fig:
+        st.plotly_chart(fig)
+else:
+        st.warning("No sector data for selected driver/lap.")
 
 # Lap Times
 with st.expander(f"📈 Lap Time Chart for {selected_session_type} at {selected_country} {selected_year}",

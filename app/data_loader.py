@@ -90,3 +90,8 @@ def fetch_pit_stop(session_key):
 def fetch_drivers(session_key):
     # Provides driver metadata such as name, number, and team color
     return fetch_data("drivers", {"session_key": session_key})
+
+@st.cache_data
+def fetch_sector_data(session_key):
+    # Fetch all available sector times for a lap, during a session.
+    return fetch_data("laps", {"session_key": session_key})
